@@ -1,12 +1,12 @@
 /******
-4105056005	�G�a�x	�Ĥ@���@�~10/9
+4105056005	鄭筠庭	第一次作業10/9
 ******/
 
 /*
-	�ާ@����:
+	操作說明: 一塊土地最多升到5級房子，
 */
 
-// wp_hw01_4105056005.cpp : �w�q�D���x���ε{�����i�J�I�C
+// wp_hw01_4105056005.cpp : 定義主控台應用程式的進入點。
 //
 
 #include "stdafx.h"
@@ -23,105 +23,223 @@ using std::setw;
 using std::fstream;
 using std::string;
 
-//�]�w��l�ȡCplayerName�O���a�W�١Fpmoney�O���a�����ƶq�Fplocations�O�a�ϤW�U�a�I�W�� : pdice�O��l�I�ơC
+//設定初始值。playerName是玩家名稱；pmoney是玩家金錢數量；plocations是地圖上各地點名稱 : pdice是骰子點數 ; plocaMon是地點價格；
+//phouses是紀錄購買房子；pposition是紀錄玩家目前位置。
 char* playerName = new char[40];
 int* pmoney = new int;
-const char** plocations = new const char*[28];
+const char** plocations = new const char*[30];
 int* pdice = new int;
+int* plocaMon = new int[30];
+int* phouses = new int[30];
+int* pposition = new int;
 
-//�]�w�U�a�a�W
+//設定各地地名和價錢，各地設為0棟房子
 void initialLocation() {
 	*(plocations) = "Start ->";
-	*(plocations + 1) = "01�x�_";
-	*(plocations + 2) = "NewTaipei";
-	*(plocations + 3) = "Taoyuan";
-	*(plocations + 4) = "Hsinchu";
-	*(plocations + 5) = "Miaoli";
-	*(plocations + 6) = "CHANCE";
-	*(plocations + 7) = "Taichung";
-	*(plocations + 8) = "Changhua";
-	*(plocations + 9) = "Nantou";
-	*(plocations + 10) = "JAIL:(";
-	*(plocations + 11) = "Yunlin";
-	*(plocations + 12) = "Chiayi";
-	*(plocations + 13) = "Tainan";
-	*(plocations + 14) = "Kaohsiung";
-	*(plocations + 15) = "PARKING";
-	*(plocations + 16) = "Pingtung";
-	*(plocations + 17) = "COMMUNITY";
-	*(plocations + 18) = "Taitung";
-	*(plocations + 19) = "Hualien";
-	*(plocations + 20) = "Yilan";
-	*(plocations + 21) = "Keelung";
-	*(plocations + 22) = "Penghu";
-	*(plocations + 23) = "23";
-	*(plocations + 24) = "24";
-	*(plocations + 25) = "JAIL:(";
-	*(plocations + 26) = "26";
-	*(plocations + 27) = "27";
-	*(plocations + 28) = "CHANCE";
-	*(plocations + 29) = "29";
+	*(plocations + 1) = "01中二丼";
+	*(plocations + 2) = "02日新";
+	*(plocations + 3) = "03玩麵";
+	*(plocations + 4) = "04聞香";
+	*(plocations + 5) = "05小慢慢";
+	*(plocations + 6) = "-機會-";
+	*(plocations + 7) = "07珍餚";
+	*(plocations + 8) = "08老虎麵";
+	*(plocations + 9) = "09五十嵐";
+	*(plocations + 10) = "$抽稅";
+	*(plocations + 11) = "11中興炒飯";
+	*(plocations + 12) = "12八方雲集";
+	*(plocations + 13) = "13Subway";
+	*(plocations + 14) = "14烤肉飯";
+	*(plocations + 15) = "15屋馬";
+	*(plocations + 16) = "16餃佼者";
+	*(plocations + 17) = "-命運-";
+	*(plocations + 18) = "18小木屋";
+	*(plocations + 19) = "19麥當勞";
+	*(plocations + 20) = "20弘爺";
+	*(plocations + 21) = "21昌平";
+	*(plocations + 22) = "22櫻木";
+	*(plocations + 23) = "23全家";
+	*(plocations + 24) = "24蛋包飯";
+	*(plocations + 25) = "$抽稅";
+	*(plocations + 26) = "26清一色";
+	*(plocations + 27) = "27御燒";
+	*(plocations + 28) = "28青";
+	*(plocations + 29) = "29香草藍舍";
+
+	*(plocaMon) = -500;
+	*(plocaMon + 1) = 100;
+	*(plocaMon + 2) = 60;
+	*(plocaMon + 3) = 120;
+	*(plocaMon + 4) = 60;
+	*(plocaMon + 5) = 110;
+	*(plocaMon + 6) = 0;
+	*(plocaMon + 7) = 100;
+	*(plocaMon + 8) = 150;
+	*(plocaMon + 9) = 160;
+	*(plocaMon + 10) = 200;
+	*(plocaMon + 11) = 200;
+	*(plocaMon + 12) = 150;
+	*(plocaMon + 13) = 250;
+	*(plocaMon + 14) = 180;
+	*(plocaMon + 15) = 400;
+	*(plocaMon + 16) = 170;
+	*(plocaMon + 17) = 0;
+	*(plocaMon + 18) = 220;
+	*(plocaMon + 19) = 250;
+	*(plocaMon + 20) = 160;
+	*(plocaMon + 21) = 200;
+	*(plocaMon + 22) = 180;
+	*(plocaMon + 23) = 230;
+	*(plocaMon + 24) = 280;
+	*(plocaMon + 25) = 200;
+	*(plocaMon + 26) = 300;
+	*(plocaMon + 27) = 320;
+	*(plocaMon + 28) = 180;
+	*(plocaMon + 29) = 350;
+
+	int* pi = new int;
+	for (*pi = 0; *pi < 30; (*pi)++) 
+		*(phouses + (*pi)) = 0;
+	delete pi;
+
+	*pposition = 0;
+
 	return;
 }
 
-//��J���a�W��
+//輸入玩家名稱
 void startNewGame() {
+	initialLocation();
 	cout << "Welcome to the Mini Monopoly Game.\n" << endl;
-	cout << "�C������:\n    ���C���}�l���B��1500���A�C���g�L�_�I�N��o300���C" << endl;
-	cout << "    �C����ʥi����Y��l(d)�άO���s�}�l��ӹC��(r)�C" << endl;
-	cout << "    ��W�a�W����ɡA�i�H�M�w�O�_�ʶR�Ĥ@�ɩФl�A�άO�~��[�\�ЫΡC�Y����w�g���Ӫ��a�\���Фl�A" <<
-			"�h�i��o�л�1.5�������C" << endl;
-	cout << "    �����|�ΩR�B����A�t�αN�۰ʩ�P�A�ð���P�W�����O�C" << endl;
-	cout << "\nPlease input player's name: ";
+	cout << "遊戲說明:\n    此遊戲開始金額為1500元，每次經過起點將獲得500元。" << endl;
+	cout << "    每次行動可選擇擲骰子(d)或是重新開始整個遊戲(r)。@代表玩家位置。" << endl;
+	cout << "    踩上地名方塊時，可以決定是否購買房子，或是繼續升級房屋，一塊土地最多升到5級房子。若方塊已經有該玩家蓋的房子，" <<
+			"則可獲得房價1.5倍的錢。" << endl;
+	cout << "    踩到機會及命運方塊，系統將自動抽牌，並執行牌上的指令。" << endl;
+	cout << "    踩到抽稅方塊，玩家將減少200元。" << endl;
+	cout << "\n請輸入玩家英文名字: ";
 	cin.get(playerName, 39);
-	cout << "Hello, " << playerName << ". Now you have $1500 in your bank. Enjoy the game:)"<< endl << endl;
+	cin.get();
+	cout << "你好, " << playerName << ". 現在你有1500元來開始這場遊戲."<< endl << endl;
 	*pmoney = 1500;
 	return;
 }
 
-//�L�X�j�I�Φa��
+//印出大富翁地圖
 void printMap() {
 	int* pi = new int;
 	int* pj = new int;
 	int* pfront = new int;
 	int* pback = new int;
-	*pfront = 1;
+	*pfront = 0;
 	*pback = 29;
-	//��u
+	//橫線
 	for (*pi = 0; *pi < 120; (*pi)++) {
 		cout << '-';
 	}
-	//�@9��9x5�p��l�A���k2��13x5�j��l
+	//共9個9x5小格子，左右2個13x5大格子
 	for (*pj = 0; *pj < 5; (*pj)++) {
-		//�L�X�a�W
-		if (*pj == 2) {
-			cout << "|   Start ->  ";
+		//印出房子
+		if (*pj == 1) {
+			if(*(phouses + (*pfront)) > 0)
+				cout << "|    " << "[@:" << *(phouses + (*pfront)) << "級屋]";
+			else
+				cout << "|             ";
+			(*pfront)++;
+			for (*pi = 0; *pi < 9; (*pi)++) {
+				if (*(phouses + (*pfront)) > 0)
+					cout << "|[@:" << *(phouses + (*pfront)) << "級屋]";
+				else
+					cout << "|         ";
+				(*pfront)++;
+			}
+			if (*(phouses + (*pfront)) > 0)
+				cout << "|    " << "[@:" << *(phouses + (*pfront)) << "級屋]| ";
+			else
+				cout << "|             | ";
+			(*pfront)++;
+		}
+		//印出地名
+		else if (*pj == 2) {
+			*pfront = 0;
+			cout << "|" << setw(13) << *(plocations + (*pfront));
+			(*pfront)++;
 			for (*pi = 0; *pi < 9; (*pi)++) {
 				cout << "|" << setw(9) << *(plocations+(*pfront));
 				(*pfront)++;
 			}
-			cout << "|    JAIL:(   | ";
+			cout << "|" << setw(13) << *(plocations + (*pfront)) << "| ";
 			(*pfront)++;
 		}
+		//印出價錢和玩家位置
+		else if (*pj == 3) {
+			*pfront = 1;
+			if (*pposition == (*pfront)-1)
+				cout << "|@            ";
+			else
+				cout << "|             ";
+			for (*pi = 0; *pi < 9; (*pi)++) {
+				if (*pi == 5) {
+					if(*pposition == *pfront)
+						cout << "|@        ";
+					else
+						cout << "|         ";
+				}
+				else {
+					if (*pposition == *pfront)
+						cout << "|" << setw(1) << '@' << setw(8) << *(plocaMon + (*pfront));
+					else
+						cout << "|" << setw(9) << *(plocaMon + (*pfront));
+				}
+				(*pfront)++;
+			}
+			if (*pposition == *pfront)
+				cout << "|@            | ";
+			else
+				cout << "|             | ";
+			(*pfront)++;
+		}
+		//沒有文字的行
 		else {
 			cout << "|             ";
-			for (*pi = 0; *pi < 9; (*pi)++) {
+			for (*pi = 0; *pi < 9; (*pi)++) 
 				cout << "|         ";
-			}
 			cout << "|             | ";
 		}
 	}
-	//��u
+	//橫線
 	for (*pi = 0; *pi < 120; (*pi)++) {
 		cout << '-';
 	}
-	//���k2��13x4�j��l�A�T��
-	for (*pi = 0; *pi < 3; (*pi)++) {
+	//左右2個13x4大格子，三排
+	for (*pi = 0; *pi < 4; (*pi)++) {
 		for (*pj = 0; *pj < 3; (*pj)++) {
-			//�L�X�a�W
-			if (*pj == 1) {
+			//印出房屋
+			if (*pj == 0) {
+				if(*(phouses + (*pback)) > 0)
+					cout << "|" << setw(7) << "[@:" << *(phouses + (*pback)) << "級屋]" << "|                                             ";
+				else
+					cout << "|             |                                             ";
+				if (*(phouses + (*pfront)) > 0)
+					cout << "                                            |" << setw(7) << "[@:" << *(phouses + (*pfront)) << "級屋]" << "| ";
+				else
+					cout << "                                            |             | ";
+			}
+			//印出地名
+			else if (*pj == 1) {
 				cout << "|" << setw(13) << *(plocations + (*pback)) << "|                                             ";
 				cout << "                                            |" << setw(13) << *(plocations + (*pfront)) <<"| ";
+			}
+			//印出價錢和玩家位置
+			else if (*pj == 2) {
+				if (*pposition == *pback)
+					cout << "|" << setw(1) << '@' << setw(12) << *(plocaMon + (*pback)) << "|                                             ";
+				else
+					cout << "|" << setw(13) << *(plocaMon + (*pback)) << "|                                             ";
+				if (*pposition == *pfront)
+					cout << "                                            |" << setw(1) << '@' << setw(12) << *(plocaMon + (*pfront)) << "| ";
+				else
+					cout << "                                            |" << setw(13) << *(plocaMon + (*pfront)) << "| ";
 				(*pfront)++;
 				(*pback)--;
 			}
@@ -130,39 +248,83 @@ void printMap() {
 				cout << "                                            |             | ";
 			}
 		}
-		cout << "--------------                                                  ";
-		cout << "                                        --------------- ";
-	}
-	for (*pj = 0; *pj < 3; (*pj)++) {
-		//�L�X�a�W
-		if (*pj == 1) {
-			cout << "|" << setw(13) << *(plocations + (*pback)) << "|                                             ";
-			cout << "                                            |" << setw(13) << *(plocations + (*pfront)) << "| ";
-			(*pfront)++;
-			(*pback)--;
+		//印出一行玩家手上金錢數
+		if (*pi == 3) {
+			cout << "|             |             " << setw(22) << playerName << setw(10) << "的金錢數: " << setw(9) << *pmoney;
+			cout << "                                   |             | ";
 		}
 		else {
-			cout << "|             |                                             ";
-			cout << "                                            |             | ";
+			cout << "--------------                                                  ";
+			cout << "                                        --------------- ";
 		}
 	}
-	//��u
+	//橫線
 	for (*pi = 0; *pi < 120; (*pi)++) {
 		cout << '-';
 	}
-	//�@9��9x5�p��l�A���k2��13x5�j��l
+	//共9個9x5小格子，左右2個13x5大格子
 	for (*pj = 0; *pj < 5; (*pj)++) {
-		//�L�X�a�W
-		if (*pj == 2) {
-			cout << "|    JAIL:(   ";
+		//印出房子
+		if (*pj == 1) {
+			if(*(phouses + (*pback)) > 0)
+				cout << "|    " << "[@:" << *(phouses + (*pback)) << "級屋]";
+			else
+				cout << "|             ";
+			(*pback)--;
+			for (*pi = 0; *pi < 9; (*pi)++) {
+				if (*(phouses + (*pback)) > 0)
+					cout << "|[@:" << *(phouses + (*pback)) << "級屋]";
+				else
+					cout << "|         ";
+				(*pback)--;
+			}
+			if (*(phouses + (*pback)) > 0)
+				cout << "|    " << "[@:" << *(phouses + (*pback)) << "級屋]| ";
+			else
+				cout << "|             | ";
+		}
+		//印出地名
+		else if (*pj == 2) {
+			*pback = 25;
+			cout << "|" << setw(13) << *(plocations + (*pback));
 			(*pback)--;
 			for (*pi = 0; *pi < 9; (*pi)++) {
 				cout << "|" << setw(9) << *(plocations + (*pback));
 				(*pback)--;
 			}
-			cout << "|   PARKING   | ";
-			(*pfront)++;
+			cout << "|" << setw(13) << *(plocations + (*pback)) << "| ";
+			(*pback)--;
 		}
+		//印出價錢和玩家位置
+		else if (*pj == 3) {
+			*pback = 25;
+			if(*pposition == *pback)
+				cout << "|@            ";
+			else
+				cout << "|             ";
+			(*pback)--;
+			for (*pi = 0; *pi < 9; (*pi)++) {
+				if (*pi == 7) {
+					if (*pposition == *pback)
+						cout << "|@        ";
+					else
+						cout << "|         ";
+				}
+				else {
+					if (*pposition == *pback)
+						cout << "|" << setw(1) << '@' << setw(8) << *(plocaMon + (*pback));
+					else
+						cout << "|" << setw(9) << *(plocaMon + (*pback));
+				}
+				(*pback)--;
+			}
+			if (*pposition == *pback)
+				cout << "|@" << setw(12) << *(plocaMon + (*pback)) << "| ";
+			else
+				cout << "|" << setw(13) << *(plocaMon + (*pback)) << "| ";
+			(*pback)--;
+		}
+		//沒有文字的行
 		else {
 			cout << "|             ";
 			for (*pi = 0; *pi < 9; (*pi)++) {
@@ -171,7 +333,7 @@ void printMap() {
 			cout << "|             | ";
 		}
 	}
-	//��u
+	//橫線
 	for (*pi = 0; *pi < 120; (*pi)++) {
 		cout << '-';
 	}
@@ -179,7 +341,7 @@ void printMap() {
 	return;
 }
 
-//�x�s�θ��J�C����r�ɮ�
+//儲存或載入遊戲文字檔案
 void saveNload() {
 	cout << "Do you want to save or load your game file?(s/l) ";
 	char* saveload = new char[20];
@@ -208,37 +370,130 @@ void saveNload() {
 	return;
 }
 
-//�üƻ��l�A�q2��12�I
+//亂數骰骰子，從2到12點；重新進行遊戲
 void rollDice() {
 	char* ptemp = new char[20];
 	do {
-		cout << "Press d to roll the dice / Press r to restart the whole game. ";
-		cin >> *ptemp;
+		cout << "按下 d 擲骰子；按下 r 將重新開始遊戲: ";
+		cin.get(ptemp, 20);
+		cin.get();
 		if (*ptemp == 'd') {
 			srand(time(NULL));
 			*pdice = (rand() % 11)+2;
-			cout << "You get: " << *pdice;
-			delete ptemp;
+			cout << "登登愣~你共擲出了 " << *pdice << " 點。 " << endl;
+			//delete [] ptemp;
 			return;
 		}
 		else if (*ptemp == 'r') {
 			//delete [] playerName;
 			//playerName = nullptr;
-			//startNewGame();
+			//delete pposition;
+			startNewGame();
+			return;
 		}
 		else {
-			cout << "Wrong input.";
+			cout << "輸入錯誤。";
 		}
 	} while (true);
 }
 
-int main()
-{	
-	initialLocation();
-	//saveNload();
-	startNewGame();
-	//printMap();
-	rollDice();
-    return 0;
+//遊戲主要架構
+void gameLoop() {
+	while (true) {
+		char* pYN = new char[20];
+		printMap();
+		rollDice();
+		*pposition += *pdice;
+		if (*pposition > 30) {
+			*pposition -= 30;
+			cout << "經過起點，很高興你能活著回來，送你500元獎勵。" << endl;
+			*pmoney += 500;
+		}
+		cout << "前往[ " << *(plocations + (*pposition)) << " ]方塊。" << endl;
+		//到達機會方塊
+		if (*pposition == 6) {
+			cout << "危機就是轉機! 親愛的玩家，抽取一張機會牌..." << endl;
+		}
+		//到達命運方塊
+		else if (*pposition == 17) {
+			cout << "你到達了命運女神的殿堂，她將賜予你一張命運牌..." << endl;
+		}
+		//到達抽稅方塊
+		else if (*pposition == 10 || *pposition == 25) {
+			cout << "真倒楣，是收稅時間!!! 請上繳200塊給系統。" << endl;
+			*pmoney -= 200;
+		}
+		//到達起點
+		else if (*pposition == 0) {
+			continue;
+		}
+		//到達可購買的方塊
+		else {
+			//土地到達五級房子
+			if (*(phouses + (*pposition)) >= 5) {
+				*(plocaMon + (*pposition)) = (int)*(plocaMon + (*pposition)) / 1.7;
+				cout << "此地點已是五級房子，到達土地上限，無法再蓋房子。收取租金，獲得" << (int)*(plocaMon + (*pposition))*1.5 << "元。" << endl;
+				*pmoney += (int)*(plocaMon + (*pposition))*1.5;
+			}
+			//如果還未買過房子
+			else if (*(phouses + (*pposition)) == 0) {	
+				cout << "請問要購買[ " << *(plocations + (*pposition)) << " ]的房子嗎? ";
+				cout << "此地房子要" << *(plocaMon + (*pposition)) << "元。(y/n) ";
+				do{	
+					cin.get(pYN, 20);
+					cin.get();
+					if (*pYN == 'y') {
+						*pmoney -= *(plocaMon + (*pposition));
+						*(phouses + (*pposition)) = 1;
+						*(plocaMon + (*pposition)) = (int)*(plocaMon + (*pposition)) * 1.7;
+						cout << "購買了[" << *(plocations + (*pposition)) << "]的房子。 此地點蓋上 1 級房屋。" << endl;
+						delete pYN;
+						break;
+					}
+					else if (*pYN == 'n') {
+						cout << "拒絕購買房子，遊戲繼續。" << endl;
+						delete pYN;
+						break;
+					}
+					else 
+						cout << "輸入錯誤，請重新輸入(y/n):";
+				}while (true);
+				
+			}
+			//買過房子
+			else {
+				cout << "你在此地已經有" << *(phouses + (*pposition)) << "級房子。收取租金，獲得" << (int)*(plocaMon + (*pposition))/1.7*1.5 << "元。" << endl;
+				*pmoney += (int)*(plocaMon + (*pposition))/1.7*1.5;
+				cout << "請問要升級[ " << *(plocations + (*pposition)) << " ]的房子嗎? ";
+				cout << "升級房子要" << *(plocaMon + (*pposition)) << "元。(y/n) ";
+				do {
+					cin.get(pYN, 20);
+					cin.get();
+					if (*pYN == 'y') {
+						*pmoney -= *(plocaMon + (*pposition));
+						*(phouses + (*pposition)) += 1;
+						cout << "升級[" << *(plocations + (*pposition)) << "]的房子。 此地點已是" << *(phouses + (*pposition)) << "級房子。" << endl;
+						delete pYN;
+						break;
+					}
+					else if(*pYN == 'n'){
+						cout << "拒絕升級房子，遊戲繼續。" << endl;
+						delete pYN;
+						break;
+					}
+					else
+						cout << "輸入錯誤，請重新輸入(y/n):";
+				} while (true);
+			}
+		}
+	}
+	return;
 }
 
+int main()
+{	
+	//saveNload();
+	startNewGame();
+	gameLoop();
+    return 0;
+}
