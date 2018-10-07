@@ -2,10 +2,6 @@
 4105056005	鄭筠庭	第一次作業10/9
 ******/
 
-/*
-	操作說明: 一塊土地最多升到5級房子，
-*/
-
 // wp_hw01_4105056005.cpp : 定義主控台應用程式的進入點。
 //
 
@@ -13,18 +9,21 @@
 #include <iostream>
 #include <fstream>
 #include <time.h>
-#include <cstring>
+#include <string>
 #include <iomanip>
 
 using std::cin;
 using std::cout;
 using std::endl;
 using std::setw;
+using std::ios;
+using std::ofstream;
 using std::fstream;
+using std::ifstream;
 using std::string;
 
 //設定初始值。playerName是玩家名稱；pmoney是玩家金錢數量；plocations是地圖上各地點名稱 : pdice是骰子點數 ; plocaMon是地點價格；
-//phouses是紀錄購買房子；pposition是紀錄玩家目前位置。
+//phouses是紀錄購買房子；pposition是紀錄玩家目前位置;preturn是重新開始時使用的變數;pnoTax是一張機會卡;pround是記錄第幾回合。
 char* playerName = new char[40];
 int* pmoney = new int;
 const char** plocations = new const char*[30];
@@ -32,9 +31,15 @@ int* pdice = new int;
 int* plocaMon = new int[30];
 int* phouses = new int[30];
 int* pposition = new int;
+int* preturn = new int;
+int* pnoTax = new int;
+int* pround = new int;
 
 //設定各地地名和價錢，各地設為0棟房子
 void initialLocation() {
+	plocations = new const char*[30];
+	plocaMon = new int[30];
+	phouses = new int[30];
 	*(plocations) = "Start ->";
 	*(plocations + 1) = "01中二丼";
 	*(plocations + 2) = "02日新";
@@ -66,11 +71,11 @@ void initialLocation() {
 	*(plocations + 28) = "28青";
 	*(plocations + 29) = "29香草藍舍";
 
-	*(plocaMon) = -500;
+	*(plocaMon) = 0;
 	*(plocaMon + 1) = 100;
 	*(plocaMon + 2) = 60;
-	*(plocaMon + 3) = 120;
-	*(plocaMon + 4) = 60;
+	*(plocaMon + 3) = 140;
+	*(plocaMon + 4) = 80;
 	*(plocaMon + 5) = 110;
 	*(plocaMon + 6) = 0;
 	*(plocaMon + 7) = 100;
@@ -81,7 +86,7 @@ void initialLocation() {
 	*(plocaMon + 12) = 150;
 	*(plocaMon + 13) = 250;
 	*(plocaMon + 14) = 180;
-	*(plocaMon + 15) = 400;
+	*(plocaMon + 15) = 420;
 	*(plocaMon + 16) = 170;
 	*(plocaMon + 17) = 0;
 	*(plocaMon + 18) = 220;
@@ -90,38 +95,134 @@ void initialLocation() {
 	*(plocaMon + 21) = 200;
 	*(plocaMon + 22) = 180;
 	*(plocaMon + 23) = 230;
-	*(plocaMon + 24) = 280;
+	*(plocaMon + 24) = 300;
 	*(plocaMon + 25) = 200;
-	*(plocaMon + 26) = 300;
+	*(plocaMon + 26) = 350;
 	*(plocaMon + 27) = 320;
-	*(plocaMon + 28) = 180;
-	*(plocaMon + 29) = 350;
+	*(plocaMon + 28) = 160;
+	*(plocaMon + 29) = 380;
 
 	int* pi = new int;
 	for (*pi = 0; *pi < 30; (*pi)++) 
 		*(phouses + (*pi)) = 0;
 	delete pi;
 
+	pposition = new int;
 	*pposition = 0;
 
+	pnoTax = new int;
+	*pnoTax = 0;
+
+	pround = new int;
+	*pround = 0;
+
+	return;
+}
+
+//儲存遊戲
+void storetxt() {
+	int* pi = new int;
+	fstream saveFile;
+	saveFile.open("Save.txt", ios::out | ios::app);
+	if (saveFile.is_open()) {
+		saveFile << "\n\n-Save file NO." << *pround << "-" << endl;
+		saveFile << "Player's name:" << playerName << endl;
+		saveFile << "Player's money:" << *pmoney << endl;
+		saveFile << "Cost of each place from 00 to 29:";
+		for (*pi = 0; *pi < 30; (*pi)++)
+			saveFile << *(plocaMon + (*pi)) << "/";
+		saveFile << endl;
+		saveFile << "Number of houses on each place from 00 to 29:";
+		for (*pi = 0; *pi < 30; (*pi)++)
+			saveFile << *(phouses + (*pi)) << "/";
+		saveFile << endl;
+		saveFile << "Player location:" << *pposition << endl;
+		saveFile << "Number of NoTax card:" << *pnoTax;
+		(*pround)++;
+		saveFile.close();
+		cout << "儲存成功。" << endl;
+	}
+	delete pi;
+	return;
+}
+
+//載入遊戲文字檔案
+void loadtxt() {
+	int* pi = new int;
+	ifstream loadFile;
+	loadFile.open("Save.txt", ifstream::in);
+	if (loadFile.is_open()) {
+		loadFile.seekg(-1, ios::end);
+		int* pkeepLooping = new int;
+		*pkeepLooping = 1;
+		for (*pi = 0; *pi < 6; (*pi)++) {
+			*pkeepLooping = 1;
+			while (*pkeepLooping) {
+				char* ch = new char;
+				loadFile.get(*ch);
+
+				if ((int)loadFile.tellg() <= 1) {             // If the data was at or before the 0th byte
+					loadFile.seekg(0);                       // The first line is the last line
+					*pkeepLooping = 0;
+				}
+				else if (*ch == '\n') {
+					*pkeepLooping = 0;
+				}
+				else {
+					loadFile.seekg(-2, ios::cur);        // Move to the front of that data, then to the front of the data before it
+				}
+			}
+			string lastLine;
+			getline(loadFile, lastLine);                      // Read the current line
+			cout << "Result: " << lastLine << '\n';
+			loadFile.seekg(-(int)(lastLine.length()+5), ios::cur);
+		}
+
+		loadFile.close();
+	}
+	/*
+	cout << "Your previous game play file: " << endl << endl;
+	while (loadFile.good()) {
+	cout << (char)loadFile.get();
+	}
+	cout << "" << endl;
+	*/
+	delete pi;
 	return;
 }
 
 //輸入玩家名稱
 void startNewGame() {
 	initialLocation();
-	cout << "Welcome to the Mini Monopoly Game.\n" << endl;
-	cout << "遊戲說明:\n    此遊戲開始金額為1500元，每次經過起點將獲得500元。" << endl;
-	cout << "    每次行動可選擇擲骰子(d)或是重新開始整個遊戲(r)。@代表玩家位置。" << endl;
+	cout << setw(70) << "-Welcome to the Mini Monopoly Game-" << endl << endl;
+	cout << "遊戲說明:\n    此遊戲開始金額建議為1000元，每次經過起點將獲得300元。" << endl;
+	cout << "    每次行動可選擇擲骰子(d)或是重新開始整個遊戲(r)。地圖上@代表玩家位置。" << endl;
 	cout << "    踩上地名方塊時，可以決定是否購買房子，或是繼續升級房屋，一塊土地最多升到5級房子。若方塊已經有該玩家蓋的房子，" <<
 			"則可獲得房價1.5倍的錢。" << endl;
 	cout << "    踩到機會及命運方塊，系統將自動抽牌，並執行牌上的指令。" << endl;
-	cout << "    踩到抽稅方塊，玩家將減少200元。" << endl;
+	cout << "    踩到抽稅方塊，玩家將減少200元。若擁有逃稅卡牌將會自動使用。" << endl << endl;
+
+	cout << "你想要載入上一次的遊玩紀錄嗎? 打入load即可載入，若不要請按 n :";
+	char* ptemp = new char[20];
+	cin.getline(ptemp, 20);
+	if (*ptemp == 'l' && *(ptemp + 1) == 'o' && *(ptemp + 2) == 'a' && *(ptemp + 3) == 'd' && *(ptemp + 4) == '\0')
+		loadtxt();
+	delete ptemp;
+
 	cout << "\n請輸入玩家英文名字: ";
-	cin.get(playerName, 39);
-	cin.get();
-	cout << "你好, " << playerName << ". 現在你有1500元來開始這場遊戲."<< endl << endl;
-	*pmoney = 1500;
+	playerName = new char[40];
+	cin.getline(playerName, 39);
+	cout << "你好, " << playerName << "，祝福你遊玩愉快。請輸入起始金額(建議1000元):";
+	pmoney = new int;
+	do {
+		cin >> *pmoney;
+		cin.get();
+		if (*pmoney <= 1000000 && *pmoney > 0)
+			break;
+		else
+			cout << "不要輸入負數或是超過一百萬，請重新輸入:";
+	} while (1);
+	
 	return;
 }
 
@@ -341,87 +442,116 @@ void printMap() {
 	return;
 }
 
-//儲存或載入遊戲文字檔案
-void saveNload() {
-	cout << "Do you want to save or load your game file?(s/l) ";
-	char* saveload = new char[20];
-	cin >> *saveload;
-	if (*saveload == 'l') {
-		fstream loadFile;
-		loadFile.open("Save.txt", fstream::in);
-		cout << "Your previous game play file: " << endl << endl;
-		while (loadFile.good()) {
-			cout << (char)loadFile.get();
-		}
-		cout << "" << endl;
-		loadFile.close();
-	}
-	/*
-	if (*saveload == 's') {
-		string textToSave;
-		cout << "Enter the string you want saved: " << endl;
-		getline(cin, textToSave);
-		ofstream saveFile("Save.txt");
-		saveFile << textToSave;
-		saveFile.close();
-	}
-	*/
-	delete [] saveload;
-	return;
-}
-
 //亂數骰骰子，從2到12點；重新進行遊戲
-void rollDice() {
+int* rollDice() {
 	char* ptemp = new char[20];
+	preturn = new int;
 	do {
-		cout << "按下 d 擲骰子；按下 r 將重新開始遊戲: ";
-		cin.get(ptemp, 20);
-		cin.get();
-		if (*ptemp == 'd') {
+		cout << "按下 d 擲骰子，按下 r 將重新開始遊戲，打入load可載入舊遊戲檔，打入store可存檔: ";
+		cin.getline(ptemp, 20);
+		if (*ptemp == 'd' && *(ptemp + 1) == '\0') {
 			srand(time(NULL));
-			*pdice = (rand() % 11)+2;
+			pdice = new int;
+			*pdice = (rand() % 11) + 2;
 			cout << "登登愣~你共擲出了 " << *pdice << " 點。 " << endl;
-			//delete [] ptemp;
-			return;
+			delete[] ptemp;
+			*preturn = 0;
+			return preturn;
 		}
-		else if (*ptemp == 'r') {
-			//delete [] playerName;
-			//playerName = nullptr;
-			//delete pposition;
-			startNewGame();
-			return;
+		else if (*ptemp == 'r' &&  *(ptemp + 1) == '\0') {
+			delete[] playerName;
+			delete pposition;
+			delete pmoney;
+			delete plocations;
+			delete[] plocaMon;
+			delete[] phouses;
+			delete pnoTax;
+			delete pround;
+			*preturn = 1;
+			return preturn;
 		}
+		else if (*ptemp == 'l' && *(ptemp + 1) == 'o' && *(ptemp + 2) == 'a' && *(ptemp + 3) == 'd' && *(ptemp + 4) == '\0')
+			loadtxt();
+		else if (*ptemp == 's' && *(ptemp + 1) == 't' && *(ptemp + 2) == 'o' && *(ptemp + 3) == 'r' && *(ptemp + 4) == 'e' && *(ptemp + 5) == '\0')
+			storetxt();
 		else {
-			cout << "輸入錯誤。";
+			cout << "輸入錯誤。" << endl;
 		}
 	} while (true);
+}
+
+//機會命運
+void chance() {
+	int* ptemp = new int;
+	srand(time(NULL));
+	*ptemp = rand() % 5;
+	switch (*ptemp) {
+		case 0:
+			cout << "掉進水溝，身上的200塊被沖走了。" << endl;
+			*pmoney -= 200;
+			break;
+		case 1:
+			cout << "被捲進黑幫鬥毆，重傷住院，花700元治療費。" << endl;
+			*pmoney -= 700;
+			break;
+		case 2:
+			cout << "得到逃稅大師的親自指點，獲得一本逃稅密籍。(可以少繳一次稅)" << endl;
+			(*pnoTax)++;
+			break;
+		case 3:
+			cout << "在衣櫃找到一具骷髏，手上握著500元，偷偷把錢抽走吧。" << endl;
+			*pmoney += 500;
+			break;
+		case 4:
+			cout << "把珍藏的美國隊長海報拿去賣掉，賺了350元。" << endl;
+			*pmoney += 350;
+			break;
+		default:
+			cout << "Error." << endl;
+	}
+	delete ptemp;
+	return;
 }
 
 //遊戲主要架構
 void gameLoop() {
 	while (true) {
 		char* pYN = new char[20];
+		char* pbroke = new char[20];
 		printMap();
-		rollDice();
+		if (*rollDice() == 1)
+			break;
+		delete preturn;
 		*pposition += *pdice;
-		if (*pposition > 30) {
+		delete pdice;
+		if (*pposition >= 30) {
 			*pposition -= 30;
-			cout << "經過起點，很高興你能活著回來，送你500元獎勵。" << endl;
-			*pmoney += 500;
+			cout << "經過起點，很高興你能活著回來，送你300元獎勵。" << endl;
+			*pmoney += 300;
 		}
 		cout << "前往[ " << *(plocations + (*pposition)) << " ]方塊。" << endl;
 		//到達機會方塊
 		if (*pposition == 6) {
-			cout << "危機就是轉機! 親愛的玩家，抽取一張機會牌..." << endl;
+			cout << "危機就是轉機! 親愛的玩家，抽取一張機會牌...(按下ENTER)" << endl;
+			cin.get();
+			chance();
 		}
 		//到達命運方塊
 		else if (*pposition == 17) {
-			cout << "你到達了命運女神的殿堂，她將賜予你一張命運牌..." << endl;
+			cout << "你到達了命運女神的殿堂，她將賜予你一張命運牌...(按下ENTER)" << endl;
+			cin.get();
+			chance();
 		}
 		//到達抽稅方塊
 		else if (*pposition == 10 || *pposition == 25) {
-			cout << "真倒楣，是收稅時間!!! 請上繳200塊給系統。" << endl;
-			*pmoney -= 200;
+			cout << "真倒楣，是收稅時間!!! 請上繳200塊給系統。(按下ENTER)" << endl;
+			cin.get();
+			if (*pnoTax > 0) {
+				cout << "使用逃稅密籍!!!我就是死不繳稅三十六式!" << endl;
+				(*pnoTax)--;
+			}
+			else
+				*pmoney -= 200;
 		}
 		//到達起點
 		else if (*pposition == 0) {
@@ -431,7 +561,7 @@ void gameLoop() {
 		else {
 			//土地到達五級房子
 			if (*(phouses + (*pposition)) >= 5) {
-				*(plocaMon + (*pposition)) = (int)*(plocaMon + (*pposition)) / 1.7;
+				*(plocaMon + (*pposition)) = (int)*(plocaMon + (*pposition)) / 2;
 				cout << "此地點已是五級房子，到達土地上限，無法再蓋房子。收取租金，獲得" << (int)*(plocaMon + (*pposition))*1.5 << "元。" << endl;
 				*pmoney += (int)*(plocaMon + (*pposition))*1.5;
 			}
@@ -440,17 +570,16 @@ void gameLoop() {
 				cout << "請問要購買[ " << *(plocations + (*pposition)) << " ]的房子嗎? ";
 				cout << "此地房子要" << *(plocaMon + (*pposition)) << "元。(y/n) ";
 				do{	
-					cin.get(pYN, 20);
-					cin.get();
-					if (*pYN == 'y') {
+					cin.getline(pYN, 20);
+					if (*pYN == 'y' && *(pYN+1) == '\0') {
 						*pmoney -= *(plocaMon + (*pposition));
 						*(phouses + (*pposition)) = 1;
-						*(plocaMon + (*pposition)) = (int)*(plocaMon + (*pposition)) * 1.7;
+						*(plocaMon + (*pposition)) = *(plocaMon + (*pposition)) * 2;
 						cout << "購買了[" << *(plocations + (*pposition)) << "]的房子。 此地點蓋上 1 級房屋。" << endl;
 						delete pYN;
 						break;
 					}
-					else if (*pYN == 'n') {
+					else if (*pYN == 'n' && *(pYN + 1) == '\0') {
 						cout << "拒絕購買房子，遊戲繼續。" << endl;
 						delete pYN;
 						break;
@@ -462,21 +591,20 @@ void gameLoop() {
 			}
 			//買過房子
 			else {
-				cout << "你在此地已經有" << *(phouses + (*pposition)) << "級房子。收取租金，獲得" << (int)*(plocaMon + (*pposition))/1.7*1.5 << "元。" << endl;
-				*pmoney += (int)*(plocaMon + (*pposition))/1.7*1.5;
+				cout << "你在此地已經有" << *(phouses + (*pposition)) << "級房子。收取租金，獲得" << (int)*(plocaMon + (*pposition))/2*1.5 << "元。" << endl;
+				*pmoney += (int)*(plocaMon + (*pposition))/2*1.5;
 				cout << "請問要升級[ " << *(plocations + (*pposition)) << " ]的房子嗎? ";
 				cout << "升級房子要" << *(plocaMon + (*pposition)) << "元。(y/n) ";
 				do {
-					cin.get(pYN, 20);
-					cin.get();
-					if (*pYN == 'y') {
+					cin.getline(pYN, 20);
+					if (*pYN == 'y' && *(pYN + 1) == '\0') {
 						*pmoney -= *(plocaMon + (*pposition));
 						*(phouses + (*pposition)) += 1;
 						cout << "升級[" << *(plocations + (*pposition)) << "]的房子。 此地點已是" << *(phouses + (*pposition)) << "級房子。" << endl;
 						delete pYN;
 						break;
 					}
-					else if(*pYN == 'n'){
+					else if(*pYN == 'n' && *(pYN + 1) == '\0'){
 						cout << "拒絕升級房子，遊戲繼續。" << endl;
 						delete pYN;
 						break;
@@ -486,14 +614,40 @@ void gameLoop() {
 				} while (true);
 			}
 		}
+		//破產
+		if (*pmoney <= 0) {
+			cout << "\n你破產了!!!!!!!!!送你一把人生重來槍，要重新開始遊戲嗎?(按r重新開始)";
+			do {
+				cin.get(pbroke, 20);
+				cin.get();
+				if (*pbroke == 'r' && (*pbroke+1) == '\0') {
+					delete[] playerName;
+					delete pposition;
+					delete pmoney;
+					delete plocations;
+					delete[] plocaMon;
+					delete[] phouses;
+					delete pnoTax;
+					delete pbroke;
+					return;
+				}
+				else 
+					cout << "輸入錯誤。" << endl;
+			} while (1);
+		}
+		//自動存檔
+		//storetxt();
 	}
 	return;
 }
 
 int main()
 {	
-	//saveNload();
-	startNewGame();
-	gameLoop();
+	while (true) {
+		startNewGame();
+		// storetxt();
+		gameLoop();
+	}
     return 0;
 }
+
