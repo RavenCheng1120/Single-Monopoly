@@ -11,6 +11,7 @@
 #include <time.h>
 #include <string>
 #include <iomanip>
+#include <sstream>
 
 using std::cin;
 using std::cout;
@@ -21,10 +22,11 @@ using std::ofstream;
 using std::fstream;
 using std::ifstream;
 using std::string;
+using std::istringstream;
 
-//設定初始值。playerName是玩家名稱；pmoney是玩家金錢數量；plocations是地圖上各地點名稱 : pdice是骰子點數 ; plocaMon是地點價格；
+//設定初始值。pplayerName是玩家名稱；pmoney是玩家金錢數量；plocations是地圖上各地點名稱 : pdice是骰子點數 ; plocaMon是地點價格；
 //phouses是紀錄購買房子；pposition是紀錄玩家目前位置;preturn是重新開始時使用的變數;pnoTax是一張機會卡;pround是記錄第幾回合。
-char* playerName = new char[40];
+string* pplayerName = new string;
 int* pmoney = new int;
 const char** plocations = new const char*[30];
 int* pdice = new int;
@@ -126,7 +128,7 @@ void storetxt() {
 	saveFile.open("Save.txt", ios::out | ios::app);
 	if (saveFile.is_open()) {
 		saveFile << "\n\n-Save file NO." << *pround << "-" << endl;
-		saveFile << "Player's name:" << playerName << endl;
+		saveFile << "Player's name:" << *pplayerName << endl;
 		saveFile << "Player's money:" << *pmoney << endl;
 		saveFile << "Cost of each place from 00 to 29:";
 		for (*pi = 0; *pi < 30; (*pi)++)
@@ -152,6 +154,7 @@ void loadtxt() {
 	ifstream loadFile;
 	loadFile.open("Save.txt", ifstream::in);
 	if (loadFile.is_open()) {
+		//取得最後六行的字串，是最新的存檔紀錄
 		loadFile.seekg(-1, ios::end);
 		int* pkeepLooping = new int;
 		*pkeepLooping = 1;
@@ -172,21 +175,69 @@ void loadtxt() {
 					loadFile.seekg(-2, ios::cur);        // Move to the front of that data, then to the front of the data before it
 				}
 			}
-			string lastLine;
-			getline(loadFile, lastLine);                      // Read the current line
-			cout << "Result: " << lastLine << '\n';
-			loadFile.seekg(-(int)(lastLine.length()+5), ios::cur);
-		}
+			string* lastLine = new string;
+			getline(loadFile, *lastLine);
 
+			//取得冒號後面的數據
+			int* len = new int;
+			*len = (*lastLine).find(":");
+			int* pcount = new int;
+			*pcount	= (int)(*lastLine).length();
+			(*lastLine) = (*lastLine).erase(0, *len + 1);
+			//cout << "Result: " << *lastLine << '\n';
+
+			//最後一行是noTax卡牌
+			if (*pi == 0) {
+				istringstream is(*lastLine);
+				is >> *pnoTax;
+			}
+			//倒數第二行是玩家位置
+			if (*pi == 1) {
+				istringstream is(*lastLine);
+				is >> *pposition;
+			}
+			//倒數第三行是各區房屋數
+			if (*pi == 2) {
+				string* first = new string;
+				int* pk = new int;
+				for (*pk = 0; *pk < 30; (*pk)++) {
+					*len = (*lastLine).find("/");
+					*first = (*lastLine).substr(0, *len);
+					(*lastLine) = (*lastLine).erase(0, *len + 1);
+					istringstream is(*first);
+					is >> *(phouses+(*pk));
+				}
+				delete first, pk;
+			}
+			//倒數第四行是各區價錢
+			if (*pi == 3) {
+				string* first = new string;
+				int* pk = new int;
+				for (*pk = 0; *pk < 30; (*pk)++) {
+					*len = (*lastLine).find("/");
+					*first = (*lastLine).substr(0, *len);
+					(*lastLine) = (*lastLine).erase(0, *len + 1);
+					istringstream is(*first);
+					is >> *(plocaMon + (*pk));
+				}
+				delete first, pk;
+			}
+			//倒數第五行是玩家金錢
+			if (*pi == 4) {
+				istringstream is(*lastLine);
+				is >> *pmoney;
+			}
+			//倒數第六行是玩家名稱
+			if (*pi == 5) {
+				*pplayerName = *lastLine;
+			}
+
+			loadFile.seekg(-((*pcount)+5), ios::cur);
+			delete lastLine, len, pcount;
+		}
+		cout << "讀檔成功" << endl << endl;
 		loadFile.close();
 	}
-	/*
-	cout << "Your previous game play file: " << endl << endl;
-	while (loadFile.good()) {
-	cout << (char)loadFile.get();
-	}
-	cout << "" << endl;
-	*/
 	delete pi;
 	return;
 }
@@ -205,14 +256,18 @@ void startNewGame() {
 	cout << "你想要載入上一次的遊玩紀錄嗎? 打入load即可載入，若不要請按 n :";
 	char* ptemp = new char[20];
 	cin.getline(ptemp, 20);
-	if (*ptemp == 'l' && *(ptemp + 1) == 'o' && *(ptemp + 2) == 'a' && *(ptemp + 3) == 'd' && *(ptemp + 4) == '\0')
+	if (*ptemp == 'l' && *(ptemp + 1) == 'o' && *(ptemp + 2) == 'a' && *(ptemp + 3) == 'd' && *(ptemp + 4) == '\0') {
 		loadtxt();
-	delete ptemp;
+		delete ptemp;
+		return;
+	}
 
 	cout << "\n請輸入玩家英文名字: ";
-	playerName = new char[40];
-	cin.getline(playerName, 39);
-	cout << "你好, " << playerName << "，祝福你遊玩愉快。請輸入起始金額(建議1000元):";
+	//playerName = new char[40];
+	pplayerName = new string;
+	getline(cin, *pplayerName);
+	//cin.getline(playerName, 39);
+	cout << "你好, " << *pplayerName << "，祝福你遊玩愉快。請輸入起始金額(建議1000元):";
 	pmoney = new int;
 	do {
 		cin >> *pmoney;
@@ -351,7 +406,7 @@ void printMap() {
 		}
 		//印出一行玩家手上金錢數
 		if (*pi == 3) {
-			cout << "|             |             " << setw(22) << playerName << setw(10) << "的金錢數: " << setw(9) << *pmoney;
+			cout << "|             |             " << setw(22) << *pplayerName << setw(10) << "的金錢數: " << setw(9) << *pmoney;
 			cout << "                                   |             | ";
 		}
 		else {
@@ -442,7 +497,7 @@ void printMap() {
 	return;
 }
 
-//亂數骰骰子，從2到12點；重新進行遊戲
+//亂數骰骰子，從2到12點；重新進行遊戲；load或是store檔案
 int* rollDice() {
 	char* ptemp = new char[20];
 	preturn = new int;
@@ -459,7 +514,7 @@ int* rollDice() {
 			return preturn;
 		}
 		else if (*ptemp == 'r' &&  *(ptemp + 1) == '\0') {
-			delete[] playerName;
+			delete pplayerName;
 			delete pposition;
 			delete pmoney;
 			delete plocations;
@@ -470,8 +525,10 @@ int* rollDice() {
 			*preturn = 1;
 			return preturn;
 		}
-		else if (*ptemp == 'l' && *(ptemp + 1) == 'o' && *(ptemp + 2) == 'a' && *(ptemp + 3) == 'd' && *(ptemp + 4) == '\0')
+		else if (*ptemp == 'l' && *(ptemp + 1) == 'o' && *(ptemp + 2) == 'a' && *(ptemp + 3) == 'd' && *(ptemp + 4) == '\0') {
 			loadtxt();
+			printMap();
+		}
 		else if (*ptemp == 's' && *(ptemp + 1) == 't' && *(ptemp + 2) == 'o' && *(ptemp + 3) == 'r' && *(ptemp + 4) == 'e' && *(ptemp + 5) == '\0')
 			storetxt();
 		else {
@@ -499,7 +556,7 @@ void chance() {
 			(*pnoTax)++;
 			break;
 		case 3:
-			cout << "在衣櫃找到一具骷髏，手上握著500元，偷偷把錢抽走吧。" << endl;
+			cout << "在衣櫃找到阿罵的大衣，口袋裡有500元，偷偷把錢抽走吧。" << endl;
 			*pmoney += 500;
 			break;
 		case 4:
@@ -532,19 +589,19 @@ void gameLoop() {
 		cout << "前往[ " << *(plocations + (*pposition)) << " ]方塊。" << endl;
 		//到達機會方塊
 		if (*pposition == 6) {
-			cout << "危機就是轉機! 親愛的玩家，抽取一張機會牌...(按下ENTER)" << endl;
+			cout << "危機就是轉機! 親愛的玩家，抽取一張機會牌...(按下ENTER)";
 			cin.get();
 			chance();
 		}
 		//到達命運方塊
 		else if (*pposition == 17) {
-			cout << "你到達了命運女神的殿堂，她將賜予你一張命運牌...(按下ENTER)" << endl;
+			cout << "你到達了命運女神的殿堂，她將賜予你一張命運牌...(按下ENTER)";
 			cin.get();
 			chance();
 		}
 		//到達抽稅方塊
 		else if (*pposition == 10 || *pposition == 25) {
-			cout << "真倒楣，是收稅時間!!! 請上繳200塊給系統。(按下ENTER)" << endl;
+			cout << "真倒楣，是收稅時間!!! 請上繳200塊給系統。(按下ENTER)";
 			cin.get();
 			if (*pnoTax > 0) {
 				cout << "使用逃稅密籍!!!我就是死不繳稅三十六式!" << endl;
@@ -621,7 +678,7 @@ void gameLoop() {
 				cin.get(pbroke, 20);
 				cin.get();
 				if (*pbroke == 'r' && (*pbroke+1) == '\0') {
-					delete[] playerName;
+					delete pplayerName;
 					delete pposition;
 					delete pmoney;
 					delete plocations;
